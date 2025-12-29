@@ -506,24 +506,48 @@
                 const voices = this.synth.getVoices();
                 const voiceSelect = document.getElementById('voiceSelect');
 
+                // Filter to only show pt-PT, pt-BR, and English voices
+                const allowedLanguages = ['pt-PT', 'pt-BR', 'en-US', 'en-GB', 'en-AU'];
+                const filteredVoices = voices.filter(v =>
+                    allowedLanguages.some(lang => v.lang === lang || v.lang.replace('_', '-') === lang)
+                );
+
                 if (voiceSelect) {
                     voiceSelect.innerHTML = '';
-                    // Filter mainly for PT but allow all just in case
-                    voices.forEach(v => {
+
+                    // Add friendly labels for each language group
+                    const langLabels = {
+                        'pt-PT': 'Português (Portugal)',
+                        'pt-BR': 'Português (Brasil)',
+                        'en-US': 'English (US)',
+                        'en-GB': 'English (UK)',
+                        'en-AU': 'English (AU)'
+                    };
+
+                    filteredVoices.forEach(v => {
                         const option = document.createElement('option');
-                        option.textContent = `${v.name} (${v.lang})`;
+                        const langCode = v.lang.replace('_', '-');
+                        const langLabel = langLabels[langCode] || langCode;
+                        option.textContent = `${v.name} - ${langLabel}`;
                         option.value = v.name;
                         voiceSelect.appendChild(option);
                     });
+
+                    // If no voices found, show a message
+                    if (filteredVoices.length === 0) {
+                        const option = document.createElement('option');
+                        option.textContent = 'Nenhuma voz disponível';
+                        option.value = '';
+                        voiceSelect.appendChild(option);
+                    }
                 }
 
-                // Priority: exact pt-PT, then any pt, then default
-                // Attempt to preserve user selection if possible? 
-                // For now, auto-select best PT if nothing selected or first load
+                // Priority: exact pt-PT, then pt-BR, then English, then first available
                 if (!this.voice) {
-                    this.voice = voices.find(v => v.lang === 'pt-PT') ||
-                        voices.find(v => v.lang.startsWith('pt')) ||
-                        null;
+                    this.voice = filteredVoices.find(v => v.lang === 'pt-PT' || v.lang === 'pt_PT') ||
+                        filteredVoices.find(v => v.lang === 'pt-BR' || v.lang === 'pt_BR') ||
+                        filteredVoices.find(v => v.lang.startsWith('en')) ||
+                        filteredVoices[0] || null;
                 }
 
                 if (this.voice && voiceSelect) {
@@ -531,7 +555,7 @@
                 }
 
                 if (!this.voice && !this.hasWarnedVoice && voices.length > 0) {
-                    // If still no voice, fallback to first
+                    // If still no voice from filtered, fallback to first available
                     this.voice = voices[0];
                 }
             }
