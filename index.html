@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo em Família - Maria Aboim</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%238b5cf6'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='Arial Black'>B</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --primary-color: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --accent-color: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --board-cell-bg: #334155;
+            --board-cell-active: #10b981;
+            --board-cell-active-text: #ffffff;
+            --font-family: 'Outfit', sans-serif;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--surface-color);
+            position: relative;
+            z-index: 50;
+            background-color: var(--bg-color);
+            /* Ensure opacity if it overlaps */
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 900px) {
+            .main-container {
+                grid-template-columns: 350px 1fr;
+                align-items: start;
+            }
+
+            .control-panel {
+                position: sticky;
+                top: 2rem;
+            }
+        }
+
+        /* Control Panel Section */
+        .control-panel {
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 100;
+            /* Ensure it stays above active grid cells */
+        }
+
+        .current-number-display {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle at center, var(--primary-color), var(--surface-color));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8rem;
+            font-weight: 800;
+            border: 4px solid var(--primary-hover);
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+            margin-bottom: 1rem;
+            animation: pulse-glow 2s infinite ease-in-out;
+            position: relative;
+        }
+
+        .current-number-display.animate {
+            animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .current-number-sub {
+            font-size: 1rem;
+            color: var(--text-muted);
+            position: absolute;
+            bottom: 20px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        button {
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-family: var(--font-family);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--board-cell-bg);
+            color: var(--text-main);
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .btn-accent {
+            background-color: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            width: 100%;
+        }
+
+        .btn-accent:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        .settings-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 12px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid #475569;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .history {
+            width: 100%;
+            text-align: center;
+        }
+
+        .history-title {
+            color: var(--text-muted);
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-balls {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .mini-ball {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--board-cell-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Board Section */
+        .board-container {
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            width: 100%;
+        }
+
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .bingo-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #475569;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .grid-cell.active {
+            background-color: var(--board-cell-active);
+            color: var(--board-cell-active-text);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 1;
+        }
+
+        .grid-cell.latest {
+            background-color: var(--accent-color);
+            animation: pulse-orange 1.5s infinite;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            margin-top: 1rem;
+            padding: 1rem;
+            width: 100%;
+            text-align: center;
+            color: var(--text-muted);
+            background-color: var(--bg-color);
+            border-radius: 12px;
+        }
+
+        /* Animations */
+        @keyframes pop-in {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(139, 92, 246, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Bingo em Família 🎱</h1>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">Criado por Mali</div>
+    </header>
+
+    <div class="main-container">
+        <!-- Control Panel -->
+        <aside class="control-panel">
+            <div class="current-number-display" id="currentNumberDisplay">
+                <span id="currentNumberText">--</span>
+                <div class="current-number-sub">NÚMERO</div>
+            </div>
+
+            <div class="history">
+                <div class="history-title">Últimos Números</div>
+                <div class="history-balls" id="historyBalls">
+                    <div class="mini-ball">-</div>
+                    <div class="mini-ball">-</div>
+                    <div class="mini-ball">-</div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label for="speedSelect">Velocidade</label>
+                <select id="speedSelect">
+                    <option value="manual">Manual (Sem Tempo)</option>
+                    <option value="2000">Muito Rápido (2s)</option>
+                    <option value="3000">Rápido (3s)</option>
+                    <option value="4000" selected>Normal (4s)</option>
+                    <option value="5000">Lento (5s)</option>
+                    <option value="6000">Mais Lento (6s)</option>
+                    <option value="8000">Muito Lento (8s)</option>
+                    <option value="10000">Extra Lento (10s)</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <label for="voiceSelect">Voz</label>
+                <select id="voiceSelect">
+                    <option value="">A carregar vozes...</option>
+                </select>
+            </div>
+
+            <div class="controls">
+                <button id="btnToggle" class="btn-primary">
+                    <span class="icon">▶</span> <span id="btnToggleText">Iniciar</span>
+                </button>
+                <button id="btnNext" class="btn-secondary" disabled>
+                    <span class="icon">⏭</span> Próximo
+                </button>
+                <button id="btnReset" class="btn-accent">
+                    <span class="icon">↺</span> Novo Jogo
+                </button>
+            </div>
+
+            <div id="statusMessage" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Pronto a
+                jogar</div>
+            <div id="counterDisplay"
+                style="font-size: 0.9rem; color: var(--text-main); margin-top: 0.5rem; font-weight: 600;">0 / 90 números
+                chamados</div>
+        </aside>
+
+        <!-- Board -->
+        <main class="board-container">
+            <div class="bingo-grid" id="bingoGrid">
+                <!-- Javascript will populate this -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class BingoCaller {
+            constructor() {
+                this.totalNumbers = 90;
+                this.availableNumbers = [];
+                this.calledNumbers = [];
+                this.isPlaying = false;
+                this.timerInterval = null;
+                this.speed = 4000; // ms
+                this.isManual = false;
+
+                // Audio
+                this.synth = window.speechSynthesis;
+                this.voice = null;
+                this.hasWarnedVoice = false;
+
+                // Elements
+                this.elCurrentNumber = document.getElementById('currentNumberText');
+                this.elCurrentDisplay = document.getElementById('currentNumberDisplay');
+                this.elGrid = document.getElementById('bingoGrid');
+                this.elBtnToggle = document.getElementById('btnToggle');
+                this.elBtnToggleText = document.getElementById('btnToggleText');
+                this.elBtnNext = document.getElementById('btnNext');
+                this.elBtnReset = document.getElementById('btnReset');
+                this.elSpeedSelect = document.getElementById('speedSelect');
+                this.elHistory = document.getElementById('historyBalls');
+                this.elStatus = document.getElementById('statusMessage');
+                this.elCounter = document.getElementById('counterDisplay');
+
+                this.init();
+            }
+
+            init() {
+                this.createGrid();
+                this.resetGame();
+
+                // Events
+                this.elBtnToggle.addEventListener('click', () => this.togglePlay());
+                this.elBtnNext.addEventListener('click', () => this.callNextNumber());
+
+                // Improved Reset Logic (Click twice to confirm)
+                this.elBtnReset.addEventListener('click', () => {
+                    if (this.resetConfirmTimeout) {
+                        // Second click - confirm
+                        clearTimeout(this.resetConfirmTimeout);
+                        this.resetConfirmTimeout = null;
+                        this.resetGame();
+                        this.elBtnReset.innerHTML = '<span class="icon">↺</span> Novo Jogo';
+                        this.elBtnReset.classList.remove('btn-warning');
+                    } else {
+                        // First click - prompt
+                        this.elBtnReset.innerHTML = 'Tem a certeza?';
+                        this.elBtnReset.classList.add('btn-warning'); // We need to add style for this
+                        this.resetConfirmTimeout = setTimeout(() => {
+                            this.elBtnReset.innerHTML = '<span class="icon">↺</span> Novo Jogo';
+                            this.elBtnReset.classList.remove('btn-warning');
+                            this.resetConfirmTimeout = null;
+                        }, 3000);
+                    }
+                });
+
+                this.elSpeedSelect.addEventListener('change', (e) => this.handleSpeedChange(e));
+
+                // Voice Selector Event
+                const voiceSelect = document.getElementById('voiceSelect');
+                if (voiceSelect) {
+                    voiceSelect.addEventListener('change', (e) => {
+                        const voices = this.synth.getVoices();
+                        this.voice = voices.find(v => v.name === e.target.value);
+                        console.log("Voz alterada para:", this.voice ? this.voice.name : "Nenhuma");
+                    });
+                }
+
+                // Audio Loading
+                this.loadVoices();
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => this.loadVoices();
+                }
+            }
+
+            loadVoices() {
+                const voices = this.synth.getVoices();
+                const voiceSelect = document.getElementById('voiceSelect');
+
+                if (voiceSelect) {
+                    voiceSelect.innerHTML = '';
+                    // Filter mainly for PT but allow all just in case
+                    voices.forEach(v => {
+                        const option = document.createElement('option');
+                        option.textContent = `${v.name} (${v.lang})`;
+                        option.value = v.name;
+                        voiceSelect.appendChild(option);
+                    });
+                }
+
+                // Priority: exact pt-PT, then any pt, then default
+                // Attempt to preserve user selection if possible? 
+                // For now, auto-select best PT if nothing selected or first load
+                if (!this.voice) {
+                    this.voice = voices.find(v => v.lang === 'pt-PT') ||
+                        voices.find(v => v.lang.startsWith('pt')) ||
+                        null;
+                }
+
+                if (this.voice && voiceSelect) {
+                    voiceSelect.value = this.voice.name;
+                }
+
+                if (!this.voice && !this.hasWarnedVoice && voices.length > 0) {
+                    // If still no voice, fallback to first
+                    this.voice = voices[0];
+                }
+            }
+
+            createGrid() {
+                this.elGrid.innerHTML = '';
+                for (let i = 1; i <= this.totalNumbers; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.id = `cell-${i}`;
+                    cell.textContent = i;
+                    this.elGrid.appendChild(cell);
+                }
+            }
+
+            resetGame() {
+                this.stopTimer();
+                this.isPlaying = false;
+                this.availableNumbers = Array.from({ length: this.totalNumbers }, (_, i) => i + 1);
+                this.calledNumbers = [];
+
+                // UI Reset
+                this.elCurrentNumber.innerText = '--';
+                this.updateButtonState();
+
+                // Clear Grid
+                document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.className = 'grid-cell';
+                });
+
+                this.updateHistory();
+                this.updateCounter();
+                this.elStatus.innerText = "Pronto a iniciar!";
+            }
+
+            updateCounter() {
+                const called = this.calledNumbers.length;
+                this.elCounter.innerText = `${called} / ${this.totalNumbers} números chamados`;
+            }
+
+            handleSpeedChange(e) {
+                const val = e.target.value;
+                if (val === 'manual') {
+                    this.isManual = true;
+                    this.stopTimer();
+                    this.isPlaying = false; // "Auto play" stops on manual switch
+                } else {
+                    this.isManual = false;
+                    this.speed = parseInt(val);
+                    // If currently playing, restart timer with new speed
+                    if (this.isPlaying) {
+                        this.stopTimer();
+                        this.startTimer();
+                    }
+                }
+                this.updateButtonState();
+            }
+
+            togglePlay() {
+                if (this.isManual) {
+                    // Start in manual mode technically doesn't "play", but maybe we just enable the Next button?
+                    // Let's treat "Start" in manual as just "Ready state" or maybe it calls the first one.
+                    // For logic simplicity: Logic controls auto-play.
+                    // If manual, "Start" is disabled or hidden? 
+                    // Let's say Start/Pause is only for Auto mode behavior.
+                    return;
+                }
+
+                if (this.isPlaying) {
+                    this.pauseGame();
+                } else {
+                    if (this.availableNumbers.length === 0) return;
+                    this.startGame();
+                }
+            }
+
+            startGame() {
+                if (this.isManual) return;
+                this.isPlaying = true;
+                this.updateButtonState();
+
+                // Call immediately if none called, or resume timer
+                // If just starting, maybe wait initial delay or call immediately? 
+                // Let's call immediately if it's the very first number or just resuming wait.
+                // Standard logic: Call immediately, then wait.
+                if (this.availableNumbers.length === this.totalNumbers) {
+                    this.callNextNumber();
+                }
+
+                this.startTimer();
+                this.elStatus.innerText = "A chamar números automaticamente...";
+            }
+
+            pauseGame() {
+                this.isPlaying = false;
+                this.stopTimer();
+                this.updateButtonState();
+                this.elStatus.innerText = "Jogo em pausa.";
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    this.callNextNumber();
+                }, this.speed);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            callNextNumber() {
+                if (this.availableNumbers.length === 0) {
+                    this.finishGame();
+                    return;
+                }
+
+                // Random selection
+                const randomIndex = Math.floor(Math.random() * this.availableNumbers.length);
+                const number = this.availableNumbers[randomIndex];
+
+                // Remove from available, add to called
+                this.availableNumbers.splice(randomIndex, 1);
+                this.calledNumbers.unshift(number); // Add to front for history
+
+                // Update Logic
+                this.updateUI(number);
+                this.speakNumber(number);
+
+                if (this.availableNumbers.length === 0) {
+                    this.finishGame();
+                }
+            }
+
+            finishGame() {
+                this.stopTimer();
+                this.isPlaying = false;
+                this.updateButtonState();
+                this.elStatus.innerText = "Todos os números foram chamados!";
+                this.elCurrentNumber.innerText = "FIM";
+            }
+
+            updateUI(number) {
+                // Main Display
+                this.elCurrentNumber.innerText = number;
+
+                // Animation Trigger
+                this.elCurrentDisplay.classList.remove('animate');
+                void this.elCurrentDisplay.offsetWidth; // trigger reflow
+                this.elCurrentDisplay.classList.add('animate');
+
+                // Grid Highlight
+                const cell = document.getElementById(`cell-${number}`);
+                if (cell) {
+                    cell.classList.add('active');
+                    // Remove 'latest' from previous
+                    const prevLatest = document.querySelector('.grid-cell.latest');
+                    if (prevLatest) prevLatest.classList.remove('latest');
+                    cell.classList.add('latest');
+                }
+
+                // History
+                this.updateHistory();
+                this.updateCounter();
+            }
+
+            updateHistory() {
+                // calledNumbers[0] is current. History is [1], [2], [3]
+                const history = this.calledNumbers.slice(1, 4);
+                this.elHistory.innerHTML = '';
+
+                for (let i = 0; i < 3; i++) {
+                    const num = history[i] || '-';
+                    const ball = document.createElement('div');
+                    ball.className = 'mini-ball';
+                    ball.textContent = num;
+                    this.elHistory.appendChild(ball);
+                }
+            }
+
+            speakNumber(number) {
+                if (!this.synth) return;
+
+                // Cancel previous speech
+                this.synth.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(number.toString());
+                if (this.voice) {
+                    utterance.voice = this.voice;
+                }
+                // Slightly slower rate for bingo clarity
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+
+                this.synth.speak(utterance);
+            }
+
+            updateButtonState() {
+                // Play/Pause Button
+                if (this.isManual) {
+                    this.elBtnToggle.style.display = 'none';
+                    this.elBtnNext.disabled = false;
+                    this.elBtnNext.classList.remove('btn-secondary');
+                    this.elBtnNext.classList.add('btn-primary');
+                    this.elStatus.innerText = "Modo Manual: Clique em 'Próximo'";
+                } else {
+                    this.elBtnToggle.style.display = 'flex';
+                    this.elBtnNext.classList.add('btn-secondary');
+                    this.elBtnNext.classList.remove('btn-primary');
+
+                    if (this.isPlaying) {
+                        this.elBtnToggleText.innerText = "Pausar";
+                        this.elBtnToggle.innerHTML = '<span class="icon">⏸</span> <span id="btnToggleText">Pausar</span>';
+                        this.elBtnNext.disabled = true; // Disable manual next while playing
+                    } else {
+                        this.elBtnToggleText.innerText = "Iniciar";
+                        this.elBtnToggle.innerHTML = '<span class="icon">▶</span> <span id="btnToggleText">Iniciar</span>';
+                        this.elBtnNext.disabled = false; // Enable manual next when paused
+                    }
+                }
+
+                if (this.availableNumbers.length === 0) {
+                    this.elBtnToggle.disabled = true;
+                    this.elBtnNext.disabled = true;
+                } else {
+                    this.elBtnToggle.disabled = false;
+                }
+            }
+        }
+
+        // Initialize Game
+        document.addEventListener('DOMContentLoaded', () => {
+            window.game = new BingoCaller();
+        });
+    </script>
+</body>
+
+</html>
