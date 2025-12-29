@@ -1,6 +1,6 @@
 # 🎱 Bingo em Família
 
-Um chamador de Bingo moderno e elegante para noites de jogos em família. Criado com carinho para a família.
+Um caller de Bingo moderno e elegante para noites de jogos em família. Criado com carinho para a família.
 
 ## ✨ Funcionalidades
 
