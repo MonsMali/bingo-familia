@@ -347,6 +347,218 @@
                 box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
             }
         }
+
+        /* BINGO Button & Modal Styles */
+        .btn-bingo {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-bingo:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .modal-close:hover {
+            color: var(--text-main);
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .player-item:hover {
+            border-color: var(--primary-color);
+        }
+
+        .player-item.first {
+            border-left: 3px solid #ffd700;
+        }
+
+        .player-item.second {
+            border-left: 3px solid #c0c0c0;
+        }
+
+        .player-item.third {
+            border-left: 3px solid #cd7f32;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .player-rank {
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
+
+        .player-name {
+            font-weight: 600;
+        }
+
+        .player-wins {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .player-remove {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0.5;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .player-remove:hover {
+            opacity: 1;
+            color: var(--accent-color);
+        }
+
+        .add-player-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .add-player-form input {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 12px;
+            border: 1px solid #475569;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+        }
+
+        .add-player-form input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-add-player {
+            padding: 0.75rem 1.25rem;
+            background-color: var(--board-cell-active);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-add-player:hover {
+            background-color: #059669;
+        }
+
+        .empty-leaderboard {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 1.5rem;
+            font-style: italic;
+        }
+
+        .modal-section-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            z-index: 1001;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -404,6 +616,9 @@
                 </button>
                 <button id="btnReset" class="btn-accent">
                     <span class="icon">↺</span> Novo Jogo
+                </button>
+                <button id="btnBingo" class="btn-bingo">
+                    🎉 BINGO!
                 </button>
             </div>
 
@@ -791,7 +1006,160 @@
         // Initialize Game
         document.addEventListener('DOMContentLoaded', () => {
             window.game = new BingoCaller();
+            window.leaderboard = new Leaderboard();
         });
+
+        // Leaderboard Class
+        class Leaderboard {
+            constructor() {
+                this.storageKey = 'bingoFamilyLeaderboard';
+                this.players = this.loadPlayers();
+                this.createModal();
+                this.bindEvents();
+            }
+
+            loadPlayers() {
+                try {
+                    const data = localStorage.getItem(this.storageKey);
+                    return data ? JSON.parse(data) : [];
+                } catch (e) { return []; }
+            }
+
+            savePlayers() {
+                localStorage.setItem(this.storageKey, JSON.stringify(this.players));
+            }
+
+            createModal() {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.id = 'leaderboardModal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-title">💩 Lista de Cagões</div>
+                            <button class="modal-close" id="btnCloseModal">✕</button>
+                        </div>
+                        <div class="modal-section-title">Clica no vencedor:</div>
+                        <div class="player-list" id="playerList">
+                            <div class="empty-leaderboard">Adiciona jogadores abaixo!</div>
+                        </div>
+                        <div class="modal-section-title">Adicionar jogador:</div>
+                        <div class="add-player-form">
+                            <input type="text" id="playerNameInput" placeholder="Nome..." maxlength="20">
+                            <button class="btn-add-player" id="btnAddPlayer">+</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                this.elModal = modal;
+                this.elPlayerList = document.getElementById('playerList');
+                this.elPlayerInput = document.getElementById('playerNameInput');
+            }
+
+            bindEvents() {
+                document.getElementById('btnBingo').addEventListener('click', () => this.showModal());
+                document.getElementById('btnCloseModal').addEventListener('click', () => this.hideModal());
+                document.getElementById('btnAddPlayer').addEventListener('click', () => this.addPlayer());
+                document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addPlayer();
+                });
+                this.elModal.addEventListener('click', (e) => {
+                    if (e.target === this.elModal) this.hideModal();
+                });
+            }
+
+            showModal() {
+                this.render();
+                this.elModal.classList.add('active');
+            }
+
+            hideModal() {
+                this.elModal.classList.remove('active');
+            }
+
+            addPlayer() {
+                const name = this.elPlayerInput.value.trim();
+                if (!name) return;
+                if (this.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                    alert('Este jogador já existe!');
+                    return;
+                }
+                this.players.push({ name, wins: 0 });
+                this.savePlayers();
+                this.elPlayerInput.value = '';
+                this.render();
+            }
+
+            removePlayer(index, event) {
+                // Ensure we have the event object
+                const e = event || window.event;
+                if (e) {
+                    e.stopPropagation();
+                    e.cancelBubble = true; // For older IE support just in case, though unlikely needed
+                }
+
+                if (confirm(`Remover ${this.players[index].name}?`)) {
+                    this.players.splice(index, 1);
+                    this.savePlayers();
+                    this.render();
+                }
+            }
+
+            declareWinner(index) {
+                this.players[index].wins++;
+                this.savePlayers();
+                this.hideModal();
+                this.celebrate();
+                const winnerName = this.players[index].name;
+                const utterance = new SpeechSynthesisUtterance(`Parabéns ${winnerName}! Ganhaste o Bingo!`);
+                if (window.game && window.game.voice) utterance.voice = window.game.voice;
+                speechSynthesis.speak(utterance);
+                setTimeout(() => { if (window.game) window.game.resetGame(); }, 2000);
+            }
+
+            celebrate() {
+                const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ff9f43', '#ee5a24'];
+                for (let i = 0; i < 80; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + 'vw';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                        document.body.appendChild(confetti);
+                        setTimeout(() => confetti.remove(), 5000);
+                    }, i * 30);
+                }
+            }
+
+            render() {
+                const sorted = [...this.players].sort((a, b) => b.wins - a.wins);
+                if (this.players.length === 0) {
+                    this.elPlayerList.innerHTML = '<div class="empty-leaderboard">Adiciona jogadores abaixo!</div>';
+                    return;
+                }
+                const rankEmojis = ['🥇', '🥈', '🥉'];
+                const rankClasses = ['first', 'second', 'third'];
+                this.elPlayerList.innerHTML = sorted.map((player, i) => {
+                    const originalIndex = this.players.findIndex(p => p.name === player.name);
+                    const rankEmoji = i < 3 ? rankEmojis[i] : `${i + 1}.`;
+                    const rankClass = i < 3 ? rankClasses[i] : '';
+                    const winsText = player.wins === 1 ? '1 vitória' : `${player.wins} vitórias`;
+                    return `
+                        <div class="player-item ${rankClass}" onclick="leaderboard.declareWinner(${originalIndex})">
+                            <div class="player-info">
+                                <span class="player-rank">${rankEmoji}</span>
+                                <span class="player-name">${player.name}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="player-wins">${winsText}</span>
+                                <button class="player-remove" onclick="leaderboard.removePlayer(${originalIndex}, event)">✕</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
     </script>
 </body>
 
