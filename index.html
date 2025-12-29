@@ -1111,7 +1111,7 @@
                 this.hideModal();
                 this.celebrate();
                 const winnerName = this.players[index].name;
-                const utterance = new SpeechSynthesisUtterance(`Parabéns ${winnerName}! Ganhaste o Bingo!`);
+                const utterance = new SpeechSynthesisUtterance(`Parabéns ${winnerName}! És mesmo cagão!`);
                 if (window.game && window.game.voice) utterance.voice = window.game.voice;
                 speechSynthesis.speak(utterance);
                 setTimeout(() => { if (window.game) window.game.resetGame(); }, 2000);
