@@ -1111,10 +1111,36 @@
                 this.hideModal();
                 this.celebrate();
                 const winnerName = this.players[index].name;
-                const utterance = new SpeechSynthesisUtterance(`Parabéns ${winnerName}! És mesmo cagão!`);
+
+                // Gender-aware term
+                const term = this.isFemale(winnerName) ? 'cagona' : 'cagão';
+
+                const utterance = new SpeechSynthesisUtterance(`Parabéns ${winnerName}! És mesmo ${term}!`);
                 if (window.game && window.game.voice) utterance.voice = window.game.voice;
                 speechSynthesis.speak(utterance);
                 setTimeout(() => { if (window.game) window.game.resetGame(); }, 2000);
+            }
+
+            isFemale(name) {
+                if (!name) return false;
+                const lowerName = name.toLowerCase().trim();
+
+                // Common female names that do NOT end in 'a'
+                // "Rute" is explicitly requested by user.
+                const femaleExceptions = new Set([
+                    'rute', 'inês', 'beatriz', 'isabel', 'alice',
+                    'iris', 'ester', 'raquel', 'noemi', 'simone',
+                    'carmen', 'miriam'
+                ]);
+
+                // Common male names that DO end in 'a'
+                const maleExceptions = new Set(['luca', 'andrea', 'fatharolas']);
+
+                if (femaleExceptions.has(lowerName)) return true;
+                if (maleExceptions.has(lowerName)) return false;
+
+                // Default rule: ends in 'a' is female
+                return lowerName.endsWith('a');
             }
 
             celebrate() {
